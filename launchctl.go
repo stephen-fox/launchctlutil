@@ -7,11 +7,41 @@ import (
 	"os/exec"
 	"os/user"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
 const (
-	defaultLaunchctl = "launchctl"
+	Unknown      Status = "unknown"
+	NotInstalled Status = "not_installed"
+	Running      Status = "running"
+	NotRunning   Status = "not_running"
+)
+
+type Status string
+
+type StatusDetails struct {
+	Status            Status
+	Pid               int
+	LastExitStatus    int
+	PidErr            error
+	LastExitStatusErr error
+}
+
+func (o StatusDetails) GotLastExitStatus() bool {
+	return o.LastExitStatusErr == nil
+}
+
+func (o StatusDetails) GotPid() bool {
+	return o.PidErr == nil
+}
+
+const (
+	defaultLaunchctl          = "launchctl"
+	couldNotFindServicePrefix = "Could not find service "
+	lastExitStatusPrefix      = "\"LastExitStatus\" = "
+	pidPrefix                 = "\"PID\" = "
+	serviceListLineSuffix     = ";"
 )
 
 var (
@@ -84,37 +114,77 @@ func Remove(configPath string, kind Kind) error {
 }
 
 func IsInstalled(configuration Configuration) (isInstalled bool, err error) {
-	if configuration.GetKind() == Daemon {
-		err := isRoot()
-		if err != nil {
-			return false, err
-		}
-	}
+	return configuration.IsInstalled()
+}
 
-	output, err := run("list")
+func CurrentStatus(label string) (StatusDetails, error) {
+	output, err := run("list", label)
 	if err != nil {
-		return false, err
+		if strings.HasPrefix(output, couldNotFindServicePrefix) {
+			return StatusDetails{
+				Status: NotInstalled,
+			}, nil
+		}
+
+		return StatusDetails{
+			Status: Unknown,
+		}, err
 	}
 
-	if strings.Contains(output, configuration.GetLabel()) {
-		configFilePath, err := configuration.GetFilePath()
-		if err != nil {
-			return false, err
-		}
-		_, temp := os.Stat(configFilePath)
-		if temp == nil {
-			currentContents, err := ioutil.ReadFile(configFilePath)
-			if err == nil {
-				if string(currentContents) == configuration.GetContents() {
-					return true, nil
-				}
-			} else {
-				return false, err
+	details := StatusDetails{
+		Status: NotRunning,
+	}
+
+	for _, l := range strings.Split(output, "\n") {
+		l = strings.TrimSpace(l)
+
+		if strings.HasPrefix(l, lastExitStatusPrefix) {
+			exit, err := getLastExitStatus(l)
+			if err != nil {
+				details.LastExitStatusErr = err
+				continue
 			}
+
+			details.LastExitStatus = exit
+			details.Status = Running
+		}
+
+		if strings.HasPrefix(l, pidPrefix) {
+			pid, err := getPid(l)
+			if err != nil {
+				details.PidErr = err
+				continue
+			}
+
+			details.Pid = pid
 		}
 	}
 
-	return false, nil
+	return details, nil
+}
+
+func getPid(lineWithoutLeadingSpaces string) (int, error) {
+	lineWithoutLeadingSpaces = strings.TrimPrefix(lineWithoutLeadingSpaces, pidPrefix)
+	lineWithoutLeadingSpaces = strings.TrimSuffix(lineWithoutLeadingSpaces, serviceListLineSuffix)
+
+	pid, err := strconv.Atoi(lineWithoutLeadingSpaces)
+	if err != nil {
+		return 0, err
+	}
+
+	return pid, nil
+}
+
+func getLastExitStatus(lineWithoutLeadingSpaces string) (int, error) {
+	lineWithoutLeadingSpaces = strings.TrimPrefix(lineWithoutLeadingSpaces, lastExitStatusPrefix)
+	lineWithoutLeadingSpaces = strings.TrimSuffix(lineWithoutLeadingSpaces, serviceListLineSuffix)
+
+	exit, err := strconv.Atoi(lineWithoutLeadingSpaces)
+	if err != nil {
+		return 0, err
+	}
+
+	return exit, nil
 }
 
 func isRoot() error {

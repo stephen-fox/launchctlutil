@@ -2,7 +2,9 @@ package launchctlutil
 
 import (
 	"errors"
+	"io/ioutil"
 	"os"
+	"strings"
 )
 
 const (
@@ -20,6 +22,8 @@ type Configuration interface {
 	GetFilePath() (configFilePath string, err error)
 
 	GetKind() Kind
+
+	IsInstalled() (bool, error)
 }
 
 type configuration struct {
@@ -57,4 +61,38 @@ func (c *configuration) GetFilePath() (configFilePath string, err error) {
 
 func (c *configuration) GetKind() Kind {
 	return c.kind
+}
+
+func (c *configuration) IsInstalled() (bool, error) {
+	if c.GetKind() == Daemon {
+		err := isRoot()
+		if err != nil {
+			return false, err
+		}
+	}
+
+	output, err := run("list")
+	if err != nil {
+		return false, err
+	}
+
+	if strings.Contains(output, c.GetLabel()) {
+		configFilePath, err := c.GetFilePath()
+		if err != nil {
+			return false, err
+		}
+		_, temp := os.Stat(configFilePath)
+		if temp == nil {
+			currentContents, err := ioutil.ReadFile(configFilePath)
+			if err == nil {
+				if string(currentContents) == c.GetContents() {
+					return true, nil
+				}
+			} else {
+				return false, err
+			}
+		}
+	}
+
+	return false, nil
 }
