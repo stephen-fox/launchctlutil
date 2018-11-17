@@ -178,7 +178,6 @@ func CurrentStatus(label string) (StatusDetails, error) {
 			}
 
 			details.LastExitStatus = exit
-			details.Status = Running
 		}
 
 		if strings.HasPrefix(l, pidPrefix) {
@@ -189,6 +188,7 @@ func CurrentStatus(label string) (StatusDetails, error) {
 			}
 
 			details.Pid = pid
+			details.Status = Running
 		}
 	}
 
