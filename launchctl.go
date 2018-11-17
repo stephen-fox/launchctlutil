@@ -117,6 +117,38 @@ func IsInstalled(configuration Configuration) (isInstalled bool, err error) {
 	return configuration.IsInstalled()
 }
 
+func Start(label string, kind Kind) error {
+	if kind == Daemon {
+		err := isRoot()
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err := run("start", label)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Stop(label string, kind Kind) error {
+	if kind == Daemon {
+		err := isRoot()
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err := run("stop", label)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CurrentStatus(label string) (StatusDetails, error) {
 	output, err := run("list", label)
 	if err != nil {
