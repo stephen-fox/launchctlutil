@@ -18,8 +18,11 @@ const (
 	NotRunning   Status = "not_running"
 )
 
+// Status represents the current status of a launchd daemon.
 type Status string
 
+// StatusDetails provides additional information about the current status of
+// a launchd daemon.
 type StatusDetails struct {
 	Status            Status
 	Pid               int
@@ -28,10 +31,13 @@ type StatusDetails struct {
 	LastExitStatusErr error
 }
 
+// GotLastExitStatus returns true if the launchd daemon provided an
+// exit status.
 func (o StatusDetails) GotLastExitStatus() bool {
 	return o.LastExitStatusErr == nil
 }
 
+// GotPid returns true if the launchd daemon provided a PID.
 func (o StatusDetails) GotPid() bool {
 	return o.PidErr == nil
 }
@@ -45,9 +51,11 @@ const (
 )
 
 var (
+	// ExePath is the path to the launchctl CLI application.
 	ExePath = defaultLaunchctl
 )
 
+// Install installs the provided Configuration.
 func Install(configuration Configuration) error {
 	if configuration.GetKind() == Daemon {
 		err := isRoot()
@@ -92,6 +100,7 @@ func Install(configuration Configuration) error {
 	return nil
 }
 
+// Remove unloads and removes the specified configuration file.
 func Remove(configPath string, kind Kind) error {
 	if kind == Daemon {
 		err := isRoot()
@@ -113,10 +122,12 @@ func Remove(configPath string, kind Kind) error {
 	return nil
 }
 
+// IsInstalled is a wrapper for Configuration.IsInstalled().
 func IsInstalled(configuration Configuration) (isInstalled bool, err error) {
 	return configuration.IsInstalled()
 }
 
+// Start starts the specified launchd daemon.
 func Start(label string, kind Kind) error {
 	if kind == Daemon {
 		err := isRoot()
@@ -133,6 +144,7 @@ func Start(label string, kind Kind) error {
 	return nil
 }
 
+// Stop stops the specified launchd daemon.
 func Stop(label string, kind Kind) error {
 	if kind == Daemon {
 		err := isRoot()
@@ -149,6 +161,7 @@ func Stop(label string, kind Kind) error {
 	return nil
 }
 
+// CurrentStatus returns the current status of the specified launchd daemon.
 func CurrentStatus(label string) (StatusDetails, error) {
 	output, err := run("list", label)
 	if err != nil {

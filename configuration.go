@@ -12,17 +12,26 @@ const (
 	Daemon    Kind = iota
 )
 
+// Kind is the launchd type (e.g., a user agent).
 type Kind int
 
+// Configuration represents a launchd configuration.
 type Configuration interface {
+	// GetLabel returns the Configuration's label.
 	GetLabel() string
 
+	// GetContents returns the Configuration as a string.
 	GetContents() string
 
+	// GetFilePath returns the path to the Configuration file.
 	GetFilePath() (configFilePath string, err error)
 
+	// GetKind returns the Configuration's kind.
 	GetKind() Kind
 
+	// IsInstalled returns true and a non-nil error if the Configuration
+	// is installed. It returns false and a non-nil error if it is
+	// not installed.
 	IsInstalled() (bool, error)
 }
 

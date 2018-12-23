@@ -24,25 +24,55 @@ const (
 	closeInt    = "</integer>\n"
 )
 
+// ConfigurationBuilder is used to build a new launchd Configuration.
+//
+// Example:
+//	config, err := launchctlutil.NewConfigurationBuilder().
+//		SetKind(launchctlutil.UserAgent).
+//		SetLabel("com.testing").
+//		SetRunAtLoad(true).
+//		SetCommand("echo").
+//		AddArgument("Hello world!").
+//		SetLogParentPath("/tmp").
+//		Build()
+//	if err != nil {
+//		log.Fatal(err.Error())
+//	}
 type ConfigurationBuilder interface {
+	// SetLabel sets the label.
 	SetLabel(label string) ConfigurationBuilder
 
+	// SetCommand sets the command to execute.
 	SetCommand(command string) ConfigurationBuilder
 
+	// AddEnvironmentVariable adds an environment variable with
+	// a given value.
 	AddEnvironmentVariable(name string, value string) ConfigurationBuilder
 
+	// AddArgument adds an argument for a command.
 	AddArgument(value string) ConfigurationBuilder
 
+	// SetLogParentPath sets the directory path where log
+	// files will be saved to.
 	SetLogParentPath(logParentPath string) ConfigurationBuilder
 
+	// SetKind sets the type.
 	SetKind(kind Kind) ConfigurationBuilder
 
+	// SetStartInterval sets the start interval in seconds.
 	SetStartInterval(seconds int) ConfigurationBuilder
 
+	// SetStartCalendarIntervalMinute sets the minute of each hour
+	// that the command will be executed. For example, setting the
+	// minute to 10 will run the command at the 10th minute of each
+	// hour: 01:10, 02:10, 03:10, and so on.
 	SetStartCalendarIntervalMinute(minuteOfEachHour int) ConfigurationBuilder
 
+	// SetRunAtLoad sets whether or not the daemon will start
+	// when it is loaded.
 	SetRunAtLoad(enabled bool) ConfigurationBuilder
 
+	// Build returns the resulting daemon Configuration.
 	Build() (Configuration, error)
 }
 
@@ -61,6 +91,7 @@ type configurationBuilder struct {
 	runAtLoad                         bool
 }
 
+// NewConfigurationBuilder creates a new instance of a ConfigurationBuilder.
 func NewConfigurationBuilder() ConfigurationBuilder {
 	return &configurationBuilder{}
 }
