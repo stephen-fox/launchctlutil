@@ -13,7 +13,7 @@ func TestCurrentStatus(t *testing.T) {
 	}
 
 	if details.Status != Running {
-		t.Fatal("Status should be running. Got -", details.Status)
+		t.Fatalf("status should be running - got %s", details.Status)
 	}
 
 	if details.Pid == 0 {
@@ -28,7 +28,7 @@ func TestCurrentStatusNotRunning(t *testing.T) {
 	}
 
 	if details.Status == Running {
-		t.Fatal("Status should be not running. Got -", details.Status)
+		t.Fatalf("status should be not running - got %s", details.Status)
 	}
 
 	if details.Pid > 0 {
@@ -46,7 +46,7 @@ func TestGetLastExitStatus(t *testing.T) {
 	}
 
 	if exit != exp {
-		t.Fatal("Exit status should be", exp, "- Got", exit)
+		t.Fatalf("exit status should be %d - got %d", exp, exit)
 	}
 }
 
@@ -60,7 +60,7 @@ func TestGetPid(t *testing.T) {
 	}
 
 	if pid != exp {
-		t.Fatal("PID should be", exp, "- Got", pid)
+		t.Fatalf("PID should be %d - got %d", exp, pid)
 	}
 }
 
@@ -71,7 +71,7 @@ func TestCurrentStatusNotInstalled(t *testing.T) {
 	}
 
 	if details.Status != NotInstalled {
-		t.Fatal("Status should be running. Got -", details.Status)
+		t.Fatalf("status should be running - got %s", details.Status)
 	}
 }
 
@@ -81,7 +81,7 @@ func TestStatusDetails_GotLastExitStatus(t *testing.T) {
 	}
 
 	if details.GotLastExitStatus() {
-		t.Fatal("Got last exit status when there was an error")
+		t.Fatal("got last exit status when there was an error")
 	}
 }
 
@@ -91,6 +91,6 @@ func TestStatusDetails_GotPid(t *testing.T) {
 	}
 
 	if details.GotPid() {
-		t.Fatal("Got a PID when there was an error")
+		t.Fatal("got a PID when there was an error")
 	}
 }
