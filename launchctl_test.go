@@ -7,7 +7,7 @@ import (
 )
 
 func TestCurrentStatus(t *testing.T) {
-	details, err := CurrentStatus("com.apple.diskspaced")
+	details, err := CurrentStatus("com.apple.Finder")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
