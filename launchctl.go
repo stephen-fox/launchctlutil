@@ -1,7 +1,7 @@
 package launchctlutil
 
 import (
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -94,7 +94,7 @@ func Install(configuration Configuration) error {
 		// Try to remove the config file if the installation fails.
 		// Ignore errors because this may create false positives.
 		os.Remove(configPath)
-		return errors.New("An unknown error occurred installing the laucnctl config")
+		return fmt.Errorf("an unknown error occurred installing the laucnctl config")
 	}
 
 	return nil
@@ -240,14 +240,14 @@ func isRoot() error {
 		if runtime.GOOS == "darwin" && strings.Contains(err.Error(), "Current not implemented on") {
 			return nil
 		}
-		return errors.New("Failed to check if current user is root - " + err.Error())
+		return fmt.Errorf("failed to check if current user is root - %s", err.Error())
 	}
 
 	if currentUser.Username == "root" {
 		return nil
 	}
 
-	return errors.New("Root privileges are required to do this")
+	return fmt.Errorf("root privileges are required to do this")
 }
 
 func run(args... string) (output string, err error) {
@@ -255,11 +255,11 @@ func run(args... string) (output string, err error) {
 	raw, err := command.CombinedOutput()
 	output = string(raw)
 	if err != nil {
-		return output, errors.New(err.Error() + " - Output: " + output)
+		return output, fmt.Errorf("%s - output: %s", err.Error(), output)
 	}
 
 	if strings.Contains(output, ": Invalid property list") {
-		return output, errors.New("Invalid property list")
+		return output, fmt.Errorf("invalid property list")
 	}
 
 	return output, nil

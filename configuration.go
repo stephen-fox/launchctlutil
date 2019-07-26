@@ -56,13 +56,13 @@ func (c *configuration) GetFilePath() (configFilePath string, err error) {
 	case UserAgent:
 		homePath := os.Getenv("HOME")
 		if homePath == "" {
-			return "", errors.New("Failed to determine HOME for UserAgent launchctl configuration")
+			return "", errors.New("failed to determine HOME for UserAgent launchctl configuration")
 		}
 		configFilePath = homePath + "/Library/LaunchAgents"
 	case Daemon:
 		configFilePath = "/Library/LaunchDaemons"
 	default:
-		return "", errors.New("An unknown launchctl configuration type was specified")
+		return "", errors.New("an unknown launchctl configuration type was specified")
 	}
 
 	return configFilePath + "/" + c.label + ".plist", nil
