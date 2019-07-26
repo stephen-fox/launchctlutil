@@ -18,11 +18,11 @@ const (
 	NotRunning   Status = "not_running"
 )
 
-// Status represents the current status of a launchd daemon.
+// Status represents the status of a launchd service.
 type Status string
 
-// StatusDetails provides additional information about the current status of
-// a launchd daemon.
+// StatusDetails provides detailed information about the status of
+// a launchd service.
 type StatusDetails struct {
 	Status            Status
 	Pid               int
@@ -31,13 +31,13 @@ type StatusDetails struct {
 	LastExitStatusErr error
 }
 
-// GotLastExitStatus returns true if the launchd daemon provided an
+// GotLastExitStatus returns true if the launchd service provided an
 // exit status.
 func (o StatusDetails) GotLastExitStatus() bool {
 	return o.LastExitStatusErr == nil
 }
 
-// GotPid returns true if the launchd daemon provided a PID.
+// GotPid returns true if the launchd service provided a PID.
 func (o StatusDetails) GotPid() bool {
 	return o.PidErr == nil
 }
@@ -55,7 +55,7 @@ var (
 	ExePath = defaultLaunchctl
 )
 
-// Install installs the provided Configuration.
+// Install installs the provided service Configuration.
 func Install(configuration Configuration) error {
 	if configuration.GetKind() == Daemon {
 		err := isRoot()
@@ -100,7 +100,7 @@ func Install(configuration Configuration) error {
 	return nil
 }
 
-// Remove unloads and removes the specified configuration file.
+// Remove unloads and removes the specified service configuration file.
 func Remove(configPath string, kind Kind) error {
 	if kind == Daemon {
 		err := isRoot()
@@ -127,7 +127,7 @@ func IsInstalled(configuration Configuration) (isInstalled bool, err error) {
 	return configuration.IsInstalled()
 }
 
-// Start starts the specified launchd daemon.
+// Start starts the specified launchd service.
 func Start(label string, kind Kind) error {
 	if kind == Daemon {
 		err := isRoot()
@@ -144,7 +144,7 @@ func Start(label string, kind Kind) error {
 	return nil
 }
 
-// Stop stops the specified launchd daemon.
+// Stop stops the specified launchd service.
 func Stop(label string, kind Kind) error {
 	if kind == Daemon {
 		err := isRoot()
@@ -161,7 +161,7 @@ func Stop(label string, kind Kind) error {
 	return nil
 }
 
-// CurrentStatus returns the current status of the specified launchd daemon.
+// CurrentStatus returns the current status of the specified launchd service.
 func CurrentStatus(label string) (StatusDetails, error) {
 	output, err := run("list", label)
 	if err != nil {
@@ -235,8 +235,9 @@ func getLastExitStatus(lineWithoutLeadingSpaces string) (int, error) {
 func isRoot() error {
 	currentUser, err := user.Current()
 	if err != nil {
-		// For whatever reason, 'user.Current()' throws a "not implemented
-		// error" when running as a launch daemon on macOS.
+		// For whatever reason, 'user.Current()' throws a "not
+		// implemented error" when running as a launch service
+		// on macOS.
 		if runtime.GOOS == "darwin" && strings.Contains(err.Error(), "Current not implemented on") {
 			return nil
 		}

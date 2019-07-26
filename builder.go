@@ -24,7 +24,7 @@ const (
 	closeInt    = "</integer>\n"
 )
 
-// ConfigurationBuilder is used to build a new launchd Configuration.
+// ConfigurationBuilder is used to build a new launchd service Configuration.
 //
 // Example:
 //	config, err := launchctlutil.NewConfigurationBuilder().
@@ -68,11 +68,11 @@ type ConfigurationBuilder interface {
 	// hour: 01:10, 02:10, 03:10, and so on.
 	SetStartCalendarIntervalMinute(minuteOfEachHour int) ConfigurationBuilder
 
-	// SetRunAtLoad sets whether or not the daemon will start
+	// SetRunAtLoad sets whether or not the service will start
 	// when it is loaded.
 	SetRunAtLoad(enabled bool) ConfigurationBuilder
 
-	// Build returns the resulting daemon Configuration.
+	// Build returns the resulting service Configuration.
 	Build() (Configuration, error)
 }
 
