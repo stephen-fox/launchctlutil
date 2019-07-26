@@ -1,7 +1,6 @@
 # launchctlutil
-
-## What is it?
-A Go library for working with launchctl.
+A Go library that provides functionality for working with the launchctl
+application and launchd.
 
 ## API
 The library offers a basic API for interacting with launchd via launchctl.
