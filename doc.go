@@ -1,2 +1,3 @@
-// Package launchctlutil provides a wrapper for the launchctl application.
+// Package launchctlutil provides functionality for working with the launchctl
+// application and launchd.
 package launchctlutil
