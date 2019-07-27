@@ -122,6 +122,19 @@ func Remove(configPath string, kind Kind) error {
 	return nil
 }
 
+// RemoveService unloads the specified service by label. Note, the service will
+// be loaded again after rebooting or logging out.
+//
+// Warning: This call does not error if the specified service does not exist.
+func RemoveService(label string) error {
+	_, err := run("remove", label)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // IsInstalled is a wrapper for Configuration.IsInstalled().
 func IsInstalled(configuration Configuration) (isInstalled bool, err error) {
 	return configuration.IsInstalled()
