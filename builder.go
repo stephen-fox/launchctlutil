@@ -52,9 +52,26 @@ type ConfigurationBuilder interface {
 	// AddArgument adds an argument for a command.
 	AddArgument(value string) ConfigurationBuilder
 
-	// SetLogParentPath sets the directory path where log
-	// files will be saved to.
+	// SetLogParentPath sets the directory path where a log
+	// file will be saved to. One combined log file is saved
+	// containing the output of both stderr and stdout. The
+	// file name is formatted as "(launchd-label).log".
+	//
+	// This setting overrides the settings of SetStandardErrorPath()
+	// and SetStandardOutPath().
 	SetLogParentPath(logParentPath string) ConfigurationBuilder
+
+	// SetStandardErrorPath sets the file path where stderr
+	// output will be saved to.
+	//
+	// This setting is ignored if SetLogParentPath() is used.
+	SetStandardErrorPath(filePath string) ConfigurationBuilder
+
+	// SetStandardOutPath sets the file path where stdout
+	// output will be saved to.
+	//
+	// This setting is ignored if SetLogParentPath() is used.
+	SetStandardOutPath(filePath string) ConfigurationBuilder
 
 	// SetKind sets the type.
 	SetKind(kind Kind) ConfigurationBuilder
@@ -83,6 +100,8 @@ type configurationBuilder struct {
 	arguments                         string
 	lines                             string
 	logParentPath                     string
+	stderrLogFilePath                 string
+	stdoutLogFilePath                 string
 	configurationFilePath             string
 	kind                              Kind
 	startIntervalSeconds              int
@@ -120,6 +139,16 @@ func (o *configurationBuilder) AddArgument(value string) ConfigurationBuilder {
 
 func (o *configurationBuilder) SetLogParentPath(logParentPath string) ConfigurationBuilder {
 	o.logParentPath = logParentPath
+	return o
+}
+
+func (o *configurationBuilder) SetStandardErrorPath(filePath string) ConfigurationBuilder {
+	o.stderrLogFilePath = filePath
+	return o
+}
+
+func (o *configurationBuilder) SetStandardOutPath(filePath string) ConfigurationBuilder {
+	o.stdoutLogFilePath = filePath
 	return o
 }
 
@@ -173,12 +202,22 @@ func (o *configurationBuilder) Build() (Configuration, error) {
 		lines = concat(lines, twoIndents, closeArray)
 	}
 
-	if o.logParentPath != "" {
+	if len(o.logParentPath) > 0 {
 		lines = concat(lines, twoIndents, openKey, "StandardOutPath", closeKey,
-			twoIndents, openString, o.logParentPath, "/", o.label, ".log", closeString,)
+			twoIndents, openString, o.logParentPath, "/", o.label, ".log", closeString)
 
 		lines = concat(lines, twoIndents, openKey, "StandardErrorPath", closeKey,
 			twoIndents, openString, o.logParentPath, "/", o.label, ".log", closeString)
+	} else {
+		if len(o.stderrLogFilePath) > 0 {
+			lines = concat(lines, twoIndents, openKey, "StandardErrorPath", closeKey,
+				twoIndents, openString, o.stderrLogFilePath, closeString)
+		}
+
+		if len(o.stdoutLogFilePath) > 0 {
+			lines = concat(lines, twoIndents, openKey, "StandardOutPath", closeKey,
+				twoIndents, openString, o.stdoutLogFilePath, closeString)
+		}
 	}
 
 	if o.startIntervalSeconds > 0 {
