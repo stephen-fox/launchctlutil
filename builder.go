@@ -183,19 +183,19 @@ func (o *configurationBuilder) Build() (Configuration, error) {
 	lines = concat(lines, twoIndents, openKey, "Label", closeKey,
 		twoIndents, openString, o.label, closeString)
 
-	if o.environmentVariables != "" {
+	if len(o.environmentVariables) > 0 {
 		lines = concat(lines, twoIndents, openKey, "EnvironmentVariables", closeKey,
 			twoIndents, openDict,
 			o.environmentVariables,
 			twoIndents, closeDict)
 	}
 
-	if o.command != "" {
+	if len(o.command) > 0 {
 		lines = concat(lines, twoIndents, openKey, "ProgramArguments", closeKey,
 			twoIndents, openArray,
 			threeIndents, openString, o.command, closeString)
 
-		if o.arguments != "" {
+		if len(o.arguments) > 0 {
 			lines = concat(lines, o.arguments)
 		}
 
