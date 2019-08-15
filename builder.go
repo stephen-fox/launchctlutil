@@ -2,6 +2,7 @@ package launchctlutil
 
 import (
 	"bytes"
+	"fmt"
 	"strconv"
 )
 
@@ -22,6 +23,7 @@ const (
 	closeString = "</string>\n"
 	openInt     = "<integer>"
 	closeInt    = "</integer>\n"
+	newLine     = "\n"
 )
 
 // ConfigurationBuilder is used to build a new launchd service Configuration.
@@ -89,6 +91,21 @@ type ConfigurationBuilder interface {
 	// when it is loaded.
 	SetRunAtLoad(enabled bool) ConfigurationBuilder
 
+	// SetUserName sets whether the service should run as a specific
+	// user (by username).
+	SetUserName(userName string) ConfigurationBuilder
+
+	// SetGroupName sets whether the service should run as a specific
+	// group (by group name).
+	SetGroupName(groupName string) ConfigurationBuilder
+
+	// SetInitGroups sets whether launchd should call the function
+	// initgroups(3) before starting the servie.
+	SetInitGroups(enabled bool) ConfigurationBuilder
+
+	// SetUmask sets the umask for the service.
+	SetUmask(umask int) ConfigurationBuilder
+
 	// Build returns the resulting service Configuration.
 	Build() (Configuration, error)
 }
@@ -108,6 +125,13 @@ type configurationBuilder struct {
 	startCalendarIntervalMinuteOfHour int
 	isStartCalendarIntervalMinuteSet  bool
 	runAtLoad                         bool
+	isRunAtLoadSet                    bool
+	userName                          string
+	groupName                         string
+	initGroups                        bool
+	isInitGroupsSet                   bool
+	umask                             int
+	isUmaskSet                        bool
 }
 
 // NewConfigurationBuilder creates a new instance of a ConfigurationBuilder.
@@ -170,6 +194,29 @@ func (o *configurationBuilder) SetStartCalendarIntervalMinute(minuteOfEachHour i
 
 func (o *configurationBuilder) SetRunAtLoad(enabled bool) ConfigurationBuilder {
 	o.runAtLoad = enabled
+	o.isRunAtLoadSet = true
+	return o
+}
+
+func (o *configurationBuilder) SetUserName(userName string) ConfigurationBuilder {
+	o.userName = userName
+	return o
+}
+
+func (o *configurationBuilder) SetGroupName(groupName string) ConfigurationBuilder {
+	o.groupName = groupName
+	return o
+}
+
+func (o *configurationBuilder) SetInitGroups(enabled bool) ConfigurationBuilder {
+	o.initGroups = enabled
+	o.isInitGroupsSet = true
+	return o
+}
+
+func (o *configurationBuilder) SetUmask(umask int) ConfigurationBuilder {
+	o.umask = umask
+	o.isUmaskSet = true
 	return o
 }
 
@@ -188,6 +235,26 @@ func (o *configurationBuilder) Build() (Configuration, error) {
 			twoIndents, openDict,
 			o.environmentVariables,
 			twoIndents, closeDict)
+	}
+
+	if len(o.userName) > 0 {
+		lines = concat(lines, twoIndents, openKey, "UserName", closeKey,
+			twoIndents, openString, o.userName, closeString)
+	}
+
+	if len(o.groupName) > 0 {
+		lines = concat(lines, twoIndents, openKey, "GroupName", closeKey,
+			twoIndents, openString, o.groupName, closeString)
+	}
+
+	if o.isInitGroupsSet {
+		lines = concat(lines, twoIndents, openKey, "InitGroups", closeKey,
+			twoIndents, boolToXml(o.initGroups), newLine)
+	}
+
+	if o.isUmaskSet {
+		lines = concat(lines, twoIndents, openKey, "Umask", closeKey,
+			twoIndents, openInt, strconv.Itoa(o.umask), closeInt)
 	}
 
 	if len(o.command) > 0 {
@@ -234,9 +301,9 @@ func (o *configurationBuilder) Build() (Configuration, error) {
 			twoIndents, closeDict)
 	}
 
-	if o.runAtLoad {
+	if o.isRunAtLoadSet {
 		lines = concat(lines, twoIndents, openKey, "RunAtLoad", closeKey,
-			twoIndents, "<true/>\n")
+			twoIndents, boolToXml(o.runAtLoad), newLine)
 	}
 
 	lines = concat(lines, oneIndent, closeDict, closePlist)
@@ -246,6 +313,10 @@ func (o *configurationBuilder) Build() (Configuration, error) {
 		contents: lines,
 		kind:     o.kind,
 	}, nil
+}
+
+func boolToXml(b bool) string {
+	return fmt.Sprintf("<%t/>", b)
 }
 
 func concat(current string, additions ...string) (new string) {
